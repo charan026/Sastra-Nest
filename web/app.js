@@ -299,35 +299,37 @@ async function setupPeerConnection(peerId) {
   };
 
   pc.ontrack = (event) => {
-    console.log('Received remote stream from', peerId);
-    const [remoteStream] = event.streams;
-    
-    // Always create audio element for all participants (voice + video rooms)
-    let audio = document.getElementById(`audio-${peerId}`);
-    if (!audio) {
-      audio = document.createElement('audio');
-      audio.id = `audio-${peerId}`;
-      audio.autoplay = true;
-      audio.style.display = 'none';
-      document.body.appendChild(audio);
-    }
-    audio.srcObject = remoteStream;
-    console.log('Set remote stream to audio element for participant', peerId);
-    
-    // Handle video display for video rooms
+    console.log('Received remote track from', peerId, event.track);
     const videoTile = document.getElementById(`participant-${peerId}`);
-    if (videoTile && state.currentRoomType === 'video') {
-      const video = videoTile.querySelector('video');
-      const placeholder = videoTile.querySelector('.placeholder');
-      if (video) {
-        video.srcObject = remoteStream;
-        console.log('Set remote stream to video element for', peerId);
-        
-        // Hide placeholder when video starts playing
-        video.onloadedmetadata = () => {
-          if (placeholder) placeholder.style.display = 'none';
-        };
+    const video = videoTile ? videoTile.querySelector('video') : null;
+    const placeholder = videoTile ? videoTile.querySelector('.placeholder') : null;
+
+    if (video && event.track.kind === 'video') {
+      console.log('Setting video track for', peerId);
+      if (!video.srcObject) {
+        video.srcObject = new MediaStream();
       }
+      video.srcObject.addTrack(event.track);
+      video.onloadedmetadata = () => {
+        if (placeholder) placeholder.style.display = 'none';
+        video.play().catch(e => console.error('Video play failed:', e));
+      };
+    }
+
+    if (event.track.kind === 'audio') {
+      console.log('Setting audio track for', peerId);
+      let audio = document.getElementById(`audio-${peerId}`);
+      if (!audio) {
+        audio = document.createElement('audio');
+        audio.id = `audio-${peerId}`;
+        audio.autoplay = true;
+        document.body.appendChild(audio);
+      }
+      if (!audio.srcObject) {
+        audio.srcObject = new MediaStream();
+      }
+      audio.srcObject.addTrack(event.track);
+      audio.play().catch(e => console.error('Audio play failed:', e));
     }
   };
 
