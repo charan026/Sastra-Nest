@@ -431,7 +431,7 @@ function updateLocalVideo() {
 
 async function connectWS() {
   console.log('Connecting to WebSocket...');
-  const ws = new WebSocket(`ws://localhost:8082/ws`);
+  const ws = new WebSocket(`wss://sastra-nest.onrender.com/ws`);
   state.ws = ws;
   state.wsReady = false;
 
@@ -705,7 +705,7 @@ function updateVoiceParticipantCount() {
 
 async function fetchPublicRooms() {
   try {
-    const res = await fetch('http://localhost:8082/rooms');
+    const res = await fetch('https://sastra-nest.onrender.com/rooms');
     const { rooms } = await res.json();
     console.log('Fetched rooms:', rooms);
     
