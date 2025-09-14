@@ -276,7 +276,9 @@ async function setupPeerConnection(peerId) {
   const pc = new RTCPeerConnection({
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun.services.mozilla.com' },
+      { urls: 'stun:stun.xten.com' }
     ]
   });
 
@@ -296,6 +298,14 @@ async function setupPeerConnection(peerId) {
         data: { candidate: event.candidate }
       });
     }
+  };
+
+  pc.oniceconnectionstatechange = () => {
+    console.log(`ICE connection state for ${peerId}: ${pc.iceConnectionState}`);
+  };
+
+  pc.onsignalingstatechange = () => {
+    console.log(`Signaling state for ${peerId}: ${pc.signalingState}`);
   };
 
   pc.ontrack = (event) => {
