@@ -459,7 +459,52 @@ async function connectWS() {
     }
   };
 
-  ws.onmessage = async (event) => {
+  async function handleSignal(fromId, data) {
+  console.log('Handling signal from', fromId, data);
+  let pc = state.peers.get(fromId);
+  if (!pc) {
+    pc = await setupPeerConnection(fromId);
+  }
+
+  try {
+    if (data.sdp) {
+      console.log('Setting remote description:', data.sdp.type, 'Current state:', pc.signalingState);
+      
+      const offerCollision = (data.sdp.type === 'offer') && (pc.signalingState !== 'stable');
+
+      if (offerCollision) {
+        console.warn('Offer collision detected, ignoring offer');
+        return;
+      }
+
+      await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+
+      if (data.sdp.type === 'offer') {
+        console.log('Creating answer for', fromId);
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        sendMessage({
+          type: 'signal',
+          to: fromId,
+          data: { sdp: pc.localDescription }
+        });
+      }
+    } else if (data.candidate) {
+      console.log('Adding ICE candidate from', fromId);
+      if (pc.remoteDescription) {
+        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+      } else {
+        console.log('Queuing ICE candidate until remote description is set');
+        if (!pc.queuedCandidates) pc.queuedCandidates = [];
+        pc.queuedCandidates.push(data.candidate);
+      }
+    }
+  } catch (error) {
+    console.error('Error handling signal:', error);
+  }
+}
+
+ws.onmessage = async (event) => {
     let msg;
     try {
       msg = JSON.parse(event.data);
@@ -533,8 +578,8 @@ async function connectWS() {
             // Create video tiles for existing participants
             msg.room.activeParticipants.forEach(p => {
               createParticipantTile(p.id, p.handle);
-              // Only create offer if we're the newer participant (higher clientId)
-              if (state.handle > p.handle) {
+              // Perfect negotiation: only the client with the smaller handle creates the offer
+              if (state.handle < p.handle) {
                 createOffer(p.id);
               }
             });
@@ -545,8 +590,8 @@ async function connectWS() {
             // Create voice participants
             msg.room.activeParticipants.forEach(p => {
               createVoiceParticipant(p.id, p.handle, p.micEnabled);
-              // Only create offer if we're the newer participant (higher clientId)
-              if (state.handle > p.handle) {
+              // Perfect negotiation: only the client with the smaller handle creates the offer
+              if (state.handle < p.handle) {
                 createOffer(p.id);
               }
             });
@@ -561,8 +606,10 @@ async function connectWS() {
           createVoiceParticipant(participant.id, participant.handle, participant.micEnabled);
           updateVoiceParticipantCount();
         }
-        // Only existing participants create offers to new ones
-        createOffer(participant.id);
+        // Perfect negotiation: only the client with the smaller handle creates the offer
+        if (state.handle < participant.handle) {
+          createOffer(participant.id);
+        }
         break;
         
       case 'participant-left':
