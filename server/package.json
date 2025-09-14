@@ -1,0 +1,14 @@
+{
+  "name": "sastra-nest-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sastra Nest signaling server (subscriptions excluded)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

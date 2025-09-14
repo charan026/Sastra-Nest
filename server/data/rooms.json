@@ -1,0 +1,32 @@
+[
+  {
+    "id": "8b56acfc-6a56-4284-86e8-29149465821d",
+    "name": "General",
+    "type": "video",
+    "isPrivate": false,
+    "password": null,
+    "creator": "system",
+    "createdAt": "2025-09-14T11:20:22.800Z",
+    "participants": [],
+    "settings": {
+      "maxParticipants": 50,
+      "allowScreenShare": true,
+      "allowReactions": true
+    }
+  },
+  {
+    "id": "ee2cc937-b59d-4dc6-a226-95c0bbac1c01",
+    "name": "hello",
+    "type": "video",
+    "isPrivate": false,
+    "password": null,
+    "creator": "4c2c780a-234a-4286-b8ff-f20750f027e8",
+    "createdAt": "2025-09-14T11:49:27.240Z",
+    "participants": [],
+    "settings": {
+      "maxParticipants": 50,
+      "allowScreenShare": true,
+      "allowReactions": true
+    }
+  }
+]

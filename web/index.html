@@ -1,0 +1,1574 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sastra Nest</title>
+  <style>
+    :root {
+      --discord-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --discord-sidebar: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+      --discord-darker: #1a252f;
+      --discord-darkest: #0f1419;
+      --discord-blurple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --discord-green: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      --discord-red: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      --discord-yellow: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+      --accent: #667eea;
+      --accent-hover: #5a67d8;
+      --text-light: #ffffff;
+      --text-normal: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-link: #60a5fa;
+      --overlay: rgba(0,0,0,0.9);
+      --glass: rgba(255,255,255,0.1);
+      --border: rgba(255,255,255,0.2);
+      --shadow: 0 8px 32px rgba(0,0,0,0.3);
+      --glow: 0 0 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: var(--discord-bg); 
+      color: var(--text-normal); 
+      height: 100vh; 
+      overflow: hidden;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    /* Discord-style Lobby */
+    .lobby {
+      display: flex;
+      height: 100vh;
+    }
+    
+    .sidebar {
+      width: 240px;
+      background: var(--discord-sidebar);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--glass);
+      pointer-events: none;
+    }
+    
+    .sidebar-header {
+      padding: 20px 16px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, var(--discord-darkest) 0%, rgba(26, 37, 47, 0.8) 100%);
+      backdrop-filter: blur(10px);
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text-light);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      letter-spacing: 0.5px;
+    }
+    
+    .sidebar-header::before {
+      content: '🎭';
+      margin-right: 8px;
+      font-size: 20px;
+      filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.6));
+    }
+    
+    .user-panel {
+      padding: 12px;
+      background: linear-gradient(135deg, var(--discord-darkest) 0%, rgba(15, 20, 25, 0.9) 100%);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text-muted);
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s ease;
+    }
+    
+    .user-panel:hover {
+      background: linear-gradient(135deg, rgba(15, 20, 25, 0.9) 0%, rgba(26, 37, 47, 0.8) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--discord-blurple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: white;
+      font-size: 14px;
+      box-shadow: var(--glow);
+      border: 2px solid rgba(255,255,255,0.2);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .user-avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: rotate(45deg);
+      transition: all 0.6s ease;
+      opacity: 0;
+    }
+    
+    .user-avatar:hover::before {
+      opacity: 1;
+      transform: rotate(45deg) translate(50%, 50%);
+    }
+    
+    .user-avatar:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 25px rgba(102, 126, 234, 0.5);
+    }
+    
+    .room-categories {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+    
+    .room-category {
+      margin-bottom: 24px;
+    }
+    
+    .category-header {
+      padding: 0 16px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .add-room-btn {
+      background: rgba(255,255,255,0.05);
+      border: 2px dashed var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 18px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .add-room-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(102, 126, 234, 0.3) 0%, transparent 70%);
+      transition: all 0.4s ease;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+    }
+    
+    .add-room-btn:hover {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+      color: var(--text-light);
+      border-color: var(--accent);
+      transform: scale(1.1);
+      box-shadow: var(--glow);
+    }
+    
+    .add-room-btn:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+    
+    .room-list {
+      list-style: none;
+    }
+    
+    .room-item {
+      padding: 12px 16px;
+      margin: 4px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      color: var(--text-muted);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      border: 1px solid transparent;
+    }
+    
+    .room-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.5s ease;
+    }
+    
+    .room-item:hover {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+      color: var(--text-light);
+      transform: translateX(8px) scale(1.02);
+      border-color: var(--accent);
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .room-item:hover::before {
+      left: 100%;
+    }
+    
+    .room-item.active {
+      background: var(--discord-blurple);
+      color: var(--text-light);
+      border-color: rgba(255,255,255,0.3);
+      box-shadow: var(--glow);
+      transform: translateX(4px);
+    }
+    
+    .room-icon {
+      margin-right: 8px;
+      font-size: 20px;
+      width: 24px;
+      text-align: center;
+    }
+    
+    .room-name {
+      flex-grow: 1;
+      font-weight: 500;
+    }
+    
+    .participant-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--discord-darkest);
+      padding: 2px 6px;
+      border-radius: 8px;
+      min-width: 20px;
+      text-align: center;
+    }
+    
+    .room-item.active .participant-count {
+      background: var(--discord-blurple);
+      color: white;
+    }
+    
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--discord-bg);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .main-content::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 70% 30%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 30% 70%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .welcome-screen {
+      text-align: center;
+      max-width: 600px;
+      padding: 60px 40px;
+      position: relative;
+      z-index: 1;
+      backdrop-filter: blur(20px);
+      background: rgba(255,255,255,0.05);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    
+    .welcome-logo {
+      width: 100px;
+      height: 100px;
+      background: var(--discord-blurple);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      color: white;
+      margin: 0 auto 30px;
+      box-shadow: var(--glow);
+      border: 3px solid rgba(255,255,255,0.2);
+      position: relative;
+      overflow: hidden;
+      animation: logoFloat 3s ease-in-out infinite;
+    }
+    
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .welcome-logo::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: rotate(45deg);
+      animation: logoShine 2s ease-in-out infinite;
+    }
+    
+    @keyframes logoShine {
+      0% { transform: rotate(45deg) translate(-100%, -100%); }
+      50% { transform: rotate(45deg) translate(100%, 100%); }
+      100% { transform: rotate(45deg) translate(-100%, -100%); }
+    }
+    
+    .welcome-screen h2 {
+      font-size: 32px;
+      margin-bottom: 20px;
+      color: var(--text-light);
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    .welcome-screen p {
+      color: var(--text-muted);
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    
+    .quick-actions {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    
+    .action-btn {
+      background: var(--discord-blurple);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .action-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+    
+    .action-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    }
+    
+    .action-btn:hover::before {
+      left: 100%;
+    }
+    
+    .action-btn.secondary {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .action-btn.secondary:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    /* Video Call View */
+    .video-call {
+      display: none;
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      overflow: hidden;
+    }
+    
+    .video-call.active {
+      display: block;
+    }
+    
+    .video-grid {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      gap: 4px;
+      padding: 4px;
+    }
+    
+    .video-grid.single {
+      grid-template-columns: 1fr;
+    }
+    
+    .video-grid.two {
+      grid-template-columns: 1fr 1fr;
+    }
+    
+    .video-grid.three {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    
+    .video-grid.four {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    
+    .video-grid.many {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+    }
+    
+    .video-tile {
+      position: relative;
+      background: #1a1a1a;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .video-tile.main {
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+    }
+    
+    .video-tile video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .video-tile .placeholder {
+      width: 80px;
+      height: 80px;
+      background: var(--green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+      color: white;
+    }
+    
+    .video-tile .name-label {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: var(--overlay);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .local-video {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 150px;
+      height: 200px;
+      background: #1a1a1a;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid var(--green);
+      z-index: 10;
+    }
+    
+    .local-video video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* Mirror effect */
+    }
+    
+    .local-video .placeholder {
+      width: 60px;
+      height: 60px;
+      background: var(--green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      margin: auto;
+      margin-top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    .call-controls {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      z-index: 20;
+    }
+    
+    .control-btn {
+      background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%);
+      border: none;
+      border-radius: 50%;
+      width: 70px;
+      height: 70px;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255,255,255,0.3);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    
+    .control-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .control-btn:hover::before {
+      opacity: 1;
+    }
+    
+    .control-btn.mic {
+      background: var(--discord-green);
+      color: white;
+      box-shadow: 0 0 20px rgba(17, 153, 142, 0.4);
+    }
+    
+    .control-btn.mic.muted {
+      background: var(--discord-red);
+      box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .control-btn.video {
+      background: var(--discord-green);
+      color: white;
+      box-shadow: 0 0 20px rgba(17, 153, 142, 0.4);
+    }
+    
+    .control-btn.video.off {
+      background: linear-gradient(135deg, #4a4a4a 0%, #3a3a3a 100%);
+      box-shadow: 0 0 20px rgba(74, 74, 74, 0.3);
+    }
+    
+    .control-btn.leave {
+      background: var(--discord-red);
+      color: white;
+      box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+    }
+    
+    .control-btn:hover {
+      transform: scale(1.15) rotate(5deg);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+    
+    .control-btn.options {
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+      box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    }
+    
+    .control-btn.reactions {
+      background: var(--discord-yellow);
+      box-shadow: 0 0 20px rgba(254, 202, 87, 0.4);
+    }
+    
+    .call-header {
+      position: absolute;
+      top: 30px;
+      left: 30px;
+      background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%);
+      backdrop-filter: blur(20px);
+      padding: 16px 24px;
+      border-radius: 20px;
+      z-index: 10;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    
+    .call-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    /* Voice Reactions Panel */
+    .reactions-panel {
+      position: absolute;
+      bottom: 80px;
+      right: 20px;
+      background: var(--discord-dark);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px;
+      display: none;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    
+    .reactions-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    
+    .reaction-btn {
+      background: var(--discord-darker);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .reaction-btn:hover {
+      background: var(--accent);
+      transform: scale(1.1);
+    }
+    
+    /* Enhanced Voice Room Layout */
+    #voice-call {
+      background: linear-gradient(135deg, #36393f 0%, #2c2f36 100%);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: relative;
+    }
+    
+    .voice-header {
+      background: var(--discord-darker);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .voice-header h3 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-normal);
+      margin-bottom: 8px;
+    }
+    
+    .voice-topic {
+      color: var(--text-muted);
+      font-size: 14px;
+      font-style: italic;
+    }
+    
+    .voice-main {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+    
+    .voice-participants-section {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .participants-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--border);
+    }
+    
+    .participants-header h4 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-normal);
+      margin: 0;
+    }
+    
+    .participant-count {
+      background: var(--accent);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .voice-participants-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .voice-participant {
+      background: var(--discord-darker);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all 0.3s ease;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .voice-participant:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+    
+    .voice-participant::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .voice-participant.speaking {
+      border-color: var(--green);
+      box-shadow: 0 0 30px rgba(67, 181, 129, 0.4), 0 8px 32px rgba(0,0,0,0.3);
+      transform: translateY(-2px);
+    }
+    
+    .voice-participant.speaking::before {
+      opacity: 1;
+    }
+    
+    .voice-participant.muted {
+      opacity: 0.7;
+      border-color: var(--red);
+    }
+    
+    .participant-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 20px;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    
+    .participant-avatar::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .voice-participant.speaking .participant-avatar::after {
+      opacity: 0.3;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.3; }
+      50% { transform: scale(1.1); opacity: 0.1; }
+    }
+    
+    .participant-info {
+      flex: 1;
+    }
+    
+    .participant-name {
+      font-weight: 600;
+      color: var(--text-normal);
+      margin-bottom: 6px;
+      font-size: 16px;
+    }
+    
+    .participant-status {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+    
+    .status-indicator.muted {
+      background: var(--red);
+    }
+    
+    .participant-controls {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .participant-control {
+      background: rgba(79, 84, 92, 0.6);
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .participant-control:hover {
+      background: var(--accent);
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .participant-control.muted {
+      background: var(--red);
+      color: white;
+    }
+    
+    .voice-room-stats {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    
+    .voice-room-stats .participant-count {
+      color: var(--green);
+      font-weight: 600;
+    }
+    
+    /* Modal Styles */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .modal-backdrop.visible {
+      display: flex;
+    }
+    
+    .modal {
+      background: var(--bg-light);
+      padding: 30px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    
+    .modal h3 {
+      margin-bottom: 20px;
+      color: var(--green);
+    }
+    
+    .modal input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #2a3942;
+      border-radius: 8px;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+    
+    .modal input:focus {
+      outline: none;
+      border-color: var(--green);
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    
+    .modal button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .modal .primary {
+      background: var(--green);
+      color: white;
+    }
+    
+    .modal .primary:hover {
+      background: var(--green-hover);
+    }
+    
+    .modal .secondary {
+      background: #4a4a4a;
+      color: white;
+    }
+    
+    .modal .secondary:hover {
+      background: #5a5a5a;
+    }
+
+    /* Voice Call View */
+    .voice-call {
+      display: none;
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: var(--discord-bg);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .voice-header {
+      position: absolute;
+      top: 40px;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .voice-header h3 {
+      font-size: 24px;
+      color: var(--text-light);
+      margin-bottom: 8px;
+    }
+
+    .voice-participants-count {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .voice-participants {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 24px;
+      max-width: 800px;
+      padding: 20px;
+      margin-top: 100px;
+    }
+
+    .voice-participant {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      border-radius: 12px;
+      background: var(--discord-sidebar);
+      transition: all 0.2s ease;
+      min-width: 120px;
+    }
+
+    .voice-participant:hover {
+      background: var(--discord-darker);
+    }
+
+    .voice-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--discord-blurple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 600;
+      color: white;
+      position: relative;
+    }
+
+    .voice-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-normal);
+      text-align: center;
+    }
+
+    .voice-mic {
+      font-size: 16px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      background: var(--discord-green);
+    }
+
+    .voice-mic.muted {
+      background: var(--discord-red);
+    }
+
+    .voice-controls {
+      position: absolute;
+      bottom: 40px;
+      display: flex;
+      gap: 20px;
+      z-index: 20;
+    }
+
+    .control-btn.options {
+      background: var(--discord-darker);
+      color: var(--text-normal);
+    }
+
+    .control-btn.options:hover {
+      background: var(--discord-darkest);
+    }
+
+    /* Options Menu */
+    .options-menu {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--discord-sidebar);
+      border-radius: 12px;
+      padding: 20px;
+      width: 400px;
+      max-height: 600px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    .options-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .options-section h4 {
+      color: var(--text-light);
+      font-size: 16px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .participants-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .participant-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: 6px;
+      background: var(--discord-darker);
+    }
+
+    .participant-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--discord-blurple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .participant-name {
+      flex-grow: 1;
+      color: var(--text-normal);
+      font-size: 14px;
+    }
+
+    .participant-status {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .audio-devices {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .audio-devices select {
+      background: var(--discord-darker);
+      color: var(--text-normal);
+      border: 1px solid var(--discord-darkest);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .option-btn {
+      background: var(--discord-darker);
+      color: var(--text-normal);
+      border: none;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      text-align: left;
+    }
+
+    .option-btn:hover {
+      background: var(--discord-darkest);
+    }
+
+    /* Reactions Panel */
+    .reactions-panel {
+      display: none;
+      position: fixed;
+      bottom: 120px;
+      right: 40px;
+      background: var(--discord-sidebar);
+      border-radius: 12px;
+      padding: 16px;
+      z-index: 1000;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    .reactions-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .reaction-btn {
+      background: var(--discord-darker);
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .reaction-btn:hover {
+      background: var(--discord-darkest);
+      transform: scale(1.1);
+    }
+
+    /* Modal Updates */
+    .modal {
+      background: var(--discord-sidebar);
+      color: var(--text-normal);
+    }
+
+    .modal h3 {
+      color: var(--text-light);
+    }
+
+    .modal input {
+      background: var(--discord-darker);
+      border: 1px solid var(--discord-darkest);
+      color: var(--text-normal);
+    }
+
+    .modal input:focus {
+      border-color: var(--discord-blurple);
+    }
+
+    .modal .primary {
+      background: var(--discord-blurple);
+    }
+
+    .modal .primary:hover {
+      background: #4752c4;
+    }
+
+    .modal .secondary {
+      background: var(--discord-darker);
+      color: var(--text-normal);
+    }
+
+    .modal .secondary:hover {
+      background: var(--discord-darkest);
+    }
+
+    /* CSS Variables Fix */
+    :root {
+      --green: var(--discord-green);
+      --red: var(--discord-red);
+      --green-hover: #2d7d32;
+      --bg-light: var(--discord-sidebar);
+      --bg-dark: var(--discord-darker);
+    }
+  </style>
+</head>
+<body>
+  <!-- Discord-style Lobby -->
+  <div id="lobby" class="lobby">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        Sastra Nest
+      </div>
+      
+      <div class="room-categories">
+        <!-- Voice Rooms Category -->
+        <div class="room-category">
+          <div class="category-header">
+            <span>Voice Channels</span>
+            <button class="add-room-btn" data-type="voice" title="Create Voice Room">+</button>
+          </div>
+          <ul id="voice-rooms" class="room-list">
+            <!-- Voice rooms will be populated here -->
+          </ul>
+        </div>
+        
+        <!-- Room Management Category -->
+        <div class="room-category">
+          <div class="category-header">
+            <span>Room Management</span>
+          </div>
+          <div class="action-buttons">
+            <button class="option-btn" id="delete-room-btn" style="display: none; color: var(--discord-red);">🗑️ Delete Room</button>
+          </div>
+        </div>
+        
+        <!-- Video Rooms Category -->
+        <div class="room-category">
+          <div class="category-header">
+            <span>Video Channels</span>
+            <button class="add-room-btn" data-type="video" title="Create Video Room">+</button>
+          </div>
+          <ul id="video-rooms" class="room-list">
+            <!-- Video rooms will be populated here -->
+          </ul>
+        </div>
+      </div>
+      
+      <div class="user-panel">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <span id="user-handle">Connecting...</span>
+      </div>
+    </aside>
+    
+    <main class="main-content">
+      <div class="welcome-screen">
+        <div class="welcome-logo">🎙️</div>
+        <h2>Welcome to Sastra Nest</h2>
+        <p>A Discord-style platform for voice and video calls. Join persistent rooms that are always active, or create your own channels for your community.</p>
+        <div class="quick-actions">
+          <button class="action-btn" id="quick-create-video">Create Video Room</button>
+          <button class="action-btn secondary" id="quick-create-voice">Create Voice Room</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Video Call View -->
+  <div id="video-call" class="video-call">
+    <div class="call-header">
+      <h3 id="call-room-name">Room Name</h3>
+    </div>
+    
+    <div id="video-grid" class="video-grid single">
+      <!-- Video tiles will be added here dynamically -->
+    </div>
+    
+    <div id="local-video" class="local-video">
+      <video id="local-video-element" autoplay muted playsinline></video>
+      <div id="local-placeholder" class="placeholder">You</div>
+    </div>
+    
+    <div class="call-controls">
+      <button id="mic-btn" class="control-btn mic" title="Toggle Microphone">🎤</button>
+      <button id="video-btn" class="control-btn video" title="Toggle Video">📹</button>
+      <button id="options-btn" class="control-btn options" title="Options">⚙️</button>
+      <button id="reactions-btn" class="control-btn reactions" title="Reactions">😀</button>
+      <button id="leave-btn" class="control-btn leave" title="Leave Room">📞</button>
+    </div>
+
+    <!-- Options Menu -->
+    <div id="options-menu" class="options-menu">
+      <div class="menu-item" id="screen-share-btn">
+        <span class="menu-item-icon">📺</span>
+        <span>Share Screen</span>
+      </div>
+    </div>
+
+    <!-- Reactions Panel -->
+    <div id="reactions-panel" class="reactions-panel">
+      <div class="reactions-grid">
+        <button class="reaction-btn" data-reaction="👍">👍</button>
+        <button class="reaction-btn" data-reaction="❤️">❤️</button>
+        <button class="reaction-btn" data-reaction="😂">😂</button>
+        <button class="reaction-btn" data-reaction="😮">😮</button>
+        <button class="reaction-btn" data-reaction="😢">😢</button>
+        <button class="reaction-btn" data-reaction="😡">😡</button>
+        <button class="reaction-btn" data-reaction="👏">👏</button>
+        <button class="reaction-btn" data-reaction="🎉">🎉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Voice Call View -->
+  <div id="voice-call" class="voice-call">
+    <div class="voice-header">
+      <h3 id="voice-room-name">#voice-room</h3>
+      <div class="voice-topic">
+        <span id="voice-room-topic">General discussion and voice chat</span>
+      </div>
+    </div>
+    
+    <div class="voice-main">
+      <div class="voice-participants-section">
+        <div class="participants-header">
+          <h4>Participants</h4>
+          <span id="voice-participants-count" class="participant-count">0</span>
+        </div>
+        <div class="voice-participants-grid" id="voice-participants"></div>
+      </div>
+    </div>
+    
+    <div class="voice-controls">
+      <button id="voice-mic-btn" class="control-btn mic" title="Toggle Microphone">🎤</button>
+      <button id="voice-options-btn" class="control-btn options" title="Options">⚙️</button>
+      <button id="voice-reactions-btn" class="control-btn reactions" title="Reactions">😀</button>
+      <button id="voice-leave-btn" class="control-btn leave" title="Leave Room">📞</button>
+    </div>
+    
+    <!-- Voice Reactions Panel -->
+    <div id="voice-reactions-panel" class="reactions-panel">
+      <div class="reactions-grid">
+        <button class="reaction-btn" data-reaction="👍">👍</button>
+        <button class="reaction-btn" data-reaction="👎">👎</button>
+        <button class="reaction-btn" data-reaction="😂">😂</button>
+        <button class="reaction-btn" data-reaction="❤️">❤️</button>
+        <button class="reaction-btn" data-reaction="😮">😮</button>
+        <button class="reaction-btn" data-reaction="👏">👏</button>
+        <button class="reaction-btn" data-reaction="🔥">🔥</button>
+        <button class="reaction-btn" data-reaction="💯">💯</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Professional Options Menu -->
+  <div id="options-menu" class="options-menu">
+    <div class="options-content">
+      <div class="options-section">
+        <h4>Participants</h4>
+        <div id="participants-list" class="participants-list">
+          <!-- Participants will be listed here -->
+        </div>
+      </div>
+      
+      <div class="options-section">
+        <h4>Audio Settings</h4>
+        <div class="audio-devices">
+          <select id="audio-input-select">
+            <option>Default Microphone</option>
+          </select>
+          <select id="audio-output-select">
+            <option>Default Speaker</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="options-section">
+        <h4>Actions</h4>
+        <div class="action-buttons">
+          <button id="screen-share-btn" class="option-btn">📺 Share Screen</button>
+          <button id="reactions-btn" class="option-btn">😀 Reactions</button>
+          <button id="report-btn" class="option-btn">⚠️ Report Issue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reactions Panel -->
+  <div id="reactions-panel" class="reactions-panel">
+    <div class="reactions-grid">
+      <button class="reaction-btn" data-emoji="👍">👍</button>
+      <button class="reaction-btn" data-emoji="👎">👎</button>
+      <button class="reaction-btn" data-emoji="❤️">❤️</button>
+      <button class="reaction-btn" data-emoji="😂">😂</button>
+      <button class="reaction-btn" data-emoji="😮">😮</button>
+      <button class="reaction-btn" data-emoji="😢">😢</button>
+      <button class="reaction-btn" data-emoji="👏">👏</button>
+      <button class="reaction-btn" data-emoji="🔥">🔥</button>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="create-modal" class="modal-backdrop">
+    <div class="modal">
+      <h3 id="modal-title">Create New Room</h3>
+      <input id="room-name-input" placeholder="Enter room name">
+      <input id="room-password-input" placeholder="Password (optional for private room)">
+      <input type="hidden" id="room-type-input" value="video">
+      <div class="modal-buttons">
+        <button id="cancel-create-btn" class="secondary">Cancel</button>
+        <button id="confirm-create-btn" class="primary">Create Room</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="join-modal" class="modal-backdrop">
+    <div class="modal">
+      <h3>Enter Room Password</h3>
+      <input id="join-password-input" type="password" placeholder="Room password">
+      <div class="modal-buttons">
+        <button id="cancel-join-btn" class="secondary">Cancel</button>
+        <button id="confirm-join-btn" class="primary">Join Room</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
