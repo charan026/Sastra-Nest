@@ -350,7 +350,7 @@ async function setupPeerConnection(peerId) {
 async function createOffer(peerId) {
   console.log('Creating offer for peer:', peerId);
   const pc = await setupPeerConnection(peerId);
-  const offer = await pc.createOffer();
+  const offer = await pc.createOffer({ iceRestart: true });
   await pc.setLocalDescription(offer);
   
   console.log('Sending offer to', peerId);
